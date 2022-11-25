@@ -1,0 +1,108 @@
+---
+output: stevetemplates::cv
+geometry: margin=1in
+
+title: "CV"
+author: Ulrik Kristoffer Stoltze
+
+jobtitle: "Medical Docter, PhD-student, Course Director, Father, Husband"
+address: "C.T. Barfoedsvej 3, 4.th., 2000 Frederiksberg, Denmark"
+fontawesome: yes
+email: ulrik.kristoffer.stoltze@regionh.dk  
+# github: svmiller
+twitter: StoltzeUlrik
+#osf: "Enter 5 digit osf string here"
+phone: "+45 50455575"
+# web: guinness.com
+updated: TRUE
+rdateformat: "`r format(Sys.time(), '%d %b %Y')`"
+
+keywords: R Markdown, academic CV, template
+
+fontfamily: mathpazo
+fontfamilyoptions: sc, osf
+fontsize: 11pt
+linkcolor: blue
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = FALSE)
+
+options(scipen = 999)
+
+library(tidyverse)
+library(scholar)
+library(splitstackshape)
+library(googlesheets4)
+```
+
+```{r}
+# Getting bibliometrics from Google Scholar using the scholar R package
+# Requires the user ID, which is found in the url for the Google scholar profile page
+scholar_ID <- "ZqNYy1MAAAAJ"
+google_scholar_url <- paste0("https://scholar.google.com/citations?user=", scholar_ID)
+# Extract metrics to build CV text later
+n_cites <- get_citation_history(scholar_ID) %>% pull(cites) %>% sum
+n_pubs <- get_num_articles(scholar_ID)
+n_first_pubs <- author_position(get_publications(scholar_ID)$author, get_profile(scholar_ID)$name) %>% filter(Position == 1) %>% nrow()
+# I co-first authored some publications. Google scholar does not take this into account, so this has to be added manually.
+n_first_pubs_corrected <- 
+  n_first_pubs + 
+  1 + # Acta neuropathol., 2022
+  1 # Childhood Acute Lymphoblastic Leukemia, 2017
+
+# As an active scientist, you'll have a number of works that are somewhere in the publication pipeline. To reflect this I created a list where I track the process. Accessed with the googlesheets package.
+gs4_deauth()
+pub_pipeline <- read_sheet("1Nx6ft4gO6JRrAqRjkZ0qPnWtFXv_aKXN6YuBAN4EqIg", range = "pipe")
+n_accepted_pubs <- pub_pipeline %>% filter(Status == "Accepted") %>% nrow()
+n_revision_review_pubs <- pub_pipeline %>% filter(Status %in% c("Review","Revision")) %>% nrow()
+n_submitted_pubs <- pub_pipeline %>% filter(Status == "Submitted") %>% nrow()
+n_presubmission_pubs <- pub_pipeline %>% filter(Status %in% c("Analysis","Preparation")) %>% nrow()
+n_pipeline_pubs <- n_accepted_pubs+n_revision_review_pubs+n_submitted_pubs+n_presubmission_pubs
+papers_paper <- ifelse(n_pipeline_pubs==1,"paper", "papers")
+
+n_old_jobs <- read_sheet("1Nx6ft4gO6JRrAqRjkZ0qPnWtFXv_aKXN6YuBAN4EqIg", range = "old_jobs") %>% nrow()
+h_taught <- read_sheet("1Nx6ft4gO6JRrAqRjkZ0qPnWtFXv_aKXN6YuBAN4EqIg", range = "teaching") %>% pull(Duration) %>% sum/60
+n_teaching_positions <- read_sheet("1Nx6ft4gO6JRrAqRjkZ0qPnWtFXv_aKXN6YuBAN4EqIg", range = "teaching") %>% distinct(Subject) %>% nrow()
+n_conf_speaks <- read_sheet("1Nx6ft4gO6JRrAqRjkZ0qPnWtFXv_aKXN6YuBAN4EqIg", range = "Conferences_and_invited_speaker") %>% nrow()
+n_media_appearances <- read_sheet("1Nx6ft4gO6JRrAqRjkZ0qPnWtFXv_aKXN6YuBAN4EqIg", range = "media") %>% nrow()
+n_courses <- read_sheet("1Nx6ft4gO6JRrAqRjkZ0qPnWtFXv_aKXN6YuBAN4EqIg", range = "courses_workshops") %>% nrow()
+n_visits <- read_sheet("1Nx6ft4gO6JRrAqRjkZ0qPnWtFXv_aKXN6YuBAN4EqIg", range = "clinical_research_stays_abroad") %>% nrow()
+```
+
+
+# Employment
+
+**PhD-student** - _Rigshospitalet, Copenhagen. Supervisor: Kjeld Schmiegelow_ \hfill 2019-*ongoing*  
+**Medical Doctor** - _Childhood Cancer Screening Clinic, Rigshospitalet, Copenhagen_ \hfill 2021-*ongoing*  
+**Course Director** - _Clinical Genomics at DIS US college, Copenhagen_ \hfill 2016-*ongoing*  
+Resident/Introstilling - _Clinical Genetics, Rigshospitalet, Copenhagen_ \hfill 2018-2019  
+Intern/KBU - _GI Surgery & General Practice, Herlev Hospital & Copenhagen_ \hfill 2017-2018  
+Research Scholar - _Rigshospitalet, Copenhagen. Supervisor: Kjeld Schmiegelow_ \hfill 2015-2016  
+Part-time employment - _`r n_old_jobs` student jobs ([full list](https://docs.google.com/spreadsheets/d/1Nx6ft4gO6JRrAqRjkZ0qPnWtFXv_aKXN6YuBAN4EqIg/edit#gid=1077861467))_  \hfill 2002-2017  
+
+# Education
+**PhD-student** - _University of Copenhagen_ \hfill 2019-*ongoing*  
+Medical Degree/cand.med. - _University of Copenhagen_ \hfill 2017
+
+# Brief bio
+
+> As a physician scientist I have led efforts to DNA sequence every Danish child with cancer since 2016. Our study has complied >1,100 whole genome seqeunces to date. I also spearhead the new Childhood Cancer Screening Clinic, est. 2021, and I am deeply passionate about genomics and disease etiology, and their ability to inform the clinical decisions I make as a doctor.
+
+
+**Publications:** **`r n_pubs`** works (**`r n_first_pubs_corrected`** as first-author) with a total of **`r n_cites`** citations ([Google Scholar](`r google_scholar_url`) - `r format(Sys.time(), '%d %b %Y')`). Additionally, a total of **`r n_pipeline_pubs`** `r papers_paper` are either accepted (**`r n_accepted_pubs`**), in revision/review (**`r n_revision_review_pubs`**), submitted (**`r n_submitted_pubs`**) or in preparation (**`r n_presubmission_pubs`**).
+
+**Awards/activities:** Young investigator awards (n = **3**, personal/for first-author work; [details](https://docs.google.com/spreadsheets/d/1Nx6ft4gO6JRrAqRjkZ0qPnWtFXv_aKXN6YuBAN4EqIg/edit#gid=81416031)).
+**`r n_conf_speaks`** conferences/invited speaker presentations ([details](https://docs.google.com/spreadsheets/d/1Nx6ft4gO6JRrAqRjkZ0qPnWtFXv_aKXN6YuBAN4EqIg/edit#gid=865149923)).
+Participated in **`r n_courses`** courses and workshops ([details](https://docs.google.com/spreadsheets/d/1Nx6ft4gO6JRrAqRjkZ0qPnWtFXv_aKXN6YuBAN4EqIg/edit#gid=1863292302)). 
+**`r n_media_appearances`** media appearances ([details](https://docs.google.com/spreadsheets/d/1Nx6ft4gO6JRrAqRjkZ0qPnWtFXv_aKXN6YuBAN4EqIg/edit#gid=189459738)). **`r n_visits`** stays with international hospitals as student, doctor or researcher ([details](https://docs.google.com/spreadsheets/d/1Nx6ft4gO6JRrAqRjkZ0qPnWtFXv_aKXN6YuBAN4EqIg/edit#gid=404877154)).
+Founder and host of *[Stetoskopet](https://stetoskopet.nu/)*, a medical podcast with 125+ episodes.
+
+**Coding & other skills:** I am highly skilled in `R programming` incl. the use of `Rmarkdown` and `tidyverse`. Also scripted in `unix`, `bash` and `python` on the HPC systems Computerome and NGC cloud. I write and speak English natively. Skilled medical illustator and animator.
+
+**Teaching:** Creator and Director for *Genomics in Clinical Practice* at DIS (US american college level). In total, **`r h_taught`** contact hours of teaching across **`r n_teaching_positions`** teaching positions.
+
+  
+
+\hfill *this document was knitted using a bespoke Rmarkdown script availble on GitHub.*
